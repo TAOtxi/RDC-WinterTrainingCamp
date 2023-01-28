@@ -10,10 +10,10 @@ def loss_func(theta, X, Y):
 def grad_des(theta, X, Y, alpha):
     temp_lose = loss_func(theta, X, Y)
     temp_theta = theta.copy()
-    theta = theta - alpha * np.sum(np.dot(X, temp_theta) - Y, axis=0) * temp_theta / m
+    theta = theta - alpha * np.dot(X.T, np.dot(X, temp_theta) - Y) / m
     while abs(temp_lose - (temp_lose := loss_func(theta, X, Y))) > 1e-5:
         temp_theta = theta.copy()
-        theta = theta - alpha * np.sum(np.dot(X, temp_theta) - Y, axis=0) * temp_theta / m
+        theta = theta - alpha * np.dot(X.T, np.dot(X, temp_theta) - Y) / m
     return theta
 
 diabetes = datasets.load_diabetes()

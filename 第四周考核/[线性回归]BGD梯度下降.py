@@ -2,31 +2,37 @@ from sklearn.linear_model import LinearRegression
 from sklearn import datasets
 import numpy as np
 
-# 定义损失函数
-def loss_func(theta, X, Y):
-    diff = np.dot(X, theta) - Y
-    return np.dot(diff.T, diff) / 2
+class Grad:
+    coef_ = []
+    intercept_ = 0
 
-# 梯度下降函数
-def grad_des(theta, X, Y, alpha):
-    temp_lose = loss_func(theta, X, Y)
-    temp_theta = theta.copy()
-    theta = theta - alpha * np.dot(X.T, np.dot(X, temp_theta) - Y)
-    while abs(temp_lose - (temp_lose := loss_func(theta, X, Y))) > 1e-5:
+    # 定义损失函数
+    @staticmethod
+    def loss_func(theta, X, Y):
+        diff = np.dot(X, theta) - Y
+        return np.dot(diff.T, diff) / 2
+
+    # 梯度下降函数
+    def grad_des(self, X, Y, alpha):
+        X = np.concatenate((np.ones((len(X), 1)), X), axis=1)
+        theta = np.ones((len(X[0]), 1))
+        temp_lose = Grad.loss_func(theta, X, Y)
         temp_theta = theta.copy()
         theta = theta - alpha * np.dot(X.T, np.dot(X, temp_theta) - Y)
-    return theta
+        while abs(temp_lose - (temp_lose := Grad.loss_func(theta, X, Y))) > 1e-5:
+            temp_theta = theta.copy()
+            theta = theta - alpha * np.dot(X.T, np.dot(X, temp_theta) - Y)
+        self.coef_, self.intercept_ = theta.T[0][1:], theta[0][0]
 
 diabetes = datasets.load_diabetes()
 data = diabetes.data
 m = len(data)
-data_ = np.concatenate((np.ones((len(data), 1)), data), axis=1)
 target = diabetes.target
 Alpha = 1.9 / m
-Theta = np.ones((len(data_[0]), 1))
-Theta = grad_des(Theta, data_, target.reshape(m, 1), Alpha)
-print("自己的系数：", Theta.T[0][1:])
-print("自己的截距：", Theta[0][0])
+BGD = Grad()
+BGD.grad_des(data, target.reshape(m, 1), Alpha)
+print("自己的系数：", BGD.coef_)
+print("自己的截距：", BGD.intercept_)
 print('-'*20)
 lr = LinearRegression()
 lr.fit(data, target)

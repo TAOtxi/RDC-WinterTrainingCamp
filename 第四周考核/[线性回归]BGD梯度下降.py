@@ -1,4 +1,4 @@
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
 from sklearn import datasets
 import numpy as np
 
@@ -10,40 +10,38 @@ class Grad:
     @staticmethod
     def loss_func(theta, X, Y):
         diff = np.dot(X, theta) - Y
-        return np.dot(diff.T, diff) / 2
+        return (np.dot(diff.T, diff) + np.dot(theta.T, theta)) / 2
 
     # 梯度下降函数
-    def grad_des(self, X, Y, alpha):
+    def grad_des(self, X, Y, alpha, beta):
         X = np.concatenate((np.ones((len(X), 1)), X), axis=1)
         theta = np.ones((len(X[0]), 1))
         temp_lose = Grad.loss_func(theta, X, Y)
-        temp_theta = theta.copy()
-        theta = theta - alpha * np.dot(X.T, np.dot(X, temp_theta) - Y)
+        theta = theta - alpha * (np.dot(X.T, np.dot(X, theta) - Y) + beta * theta)
         while abs(temp_lose - (temp_lose := Grad.loss_func(theta, X, Y))) > 1e-5:
-            temp_theta = theta.copy()
-            theta = theta - alpha * np.dot(X.T, np.dot(X, temp_theta) - Y)
+            theta = theta - alpha * (np.dot(X.T, np.dot(X, theta) - Y) + beta * theta)
         self.coef_, self.intercept_ = theta.T[0][1:], theta[0][0]
 
 diabetes = datasets.load_diabetes()
 data = diabetes.data
 m = len(data)
 target = diabetes.target
-Alpha = 1.9 / m
+Alpha = 0.004
+Beta = 0.001
 BGD = Grad()
-BGD.grad_des(data, target.reshape(m, 1), Alpha)
+BGD.grad_des(data, target.reshape(m, 1), Alpha, Beta)
 print("自己的系数：", BGD.coef_)
 print("自己的截距：", BGD.intercept_)
 print('-'*20)
-lr = LinearRegression()
-lr.fit(data, target)
-print("sklearn拟合系数", lr.coef_)
-print("sklearn截距", lr.intercept_)
+ridge = Ridge(alpha=0.001).fit(data, target)
+print("Ridge拟合系数", ridge.coef_)
+print("Ridge截距", ridge.intercept_)
 '''
->>>自己的系数： [  -9.99381385 -239.79846532  519.88625585  324.37228024 -788.18534877
-                473.57283614   99.2561154   176.55377325  749.78933312   67.64009601]
->>>自己的截距： 152.13348416289645
+自己的系数： [  -9.5514136  -239.0903527   520.36336903  323.82862566 -712.32801231
+  413.38364115   65.81154253  167.51374939  720.94439563   68.12210045]
+自己的截距： 152.1331399702721
 --------------------
->>>sklearn拟合系数 [ -10.01219782 -239.81908937  519.83978679  324.39042769 -792.18416163
-                    476.74583782  101.04457032  177.06417623  751.27932109   67.62538639]
->>>sklearn截距  152.1334841628965
+Ridge拟合系数 [  -9.55141449 -239.09035369  520.36336678  323.82862653 -712.3282053
+  413.38379428   65.81162885  167.51377403  720.94446754   68.12209974]
+Ridge截距 152.13348416289648
 '''

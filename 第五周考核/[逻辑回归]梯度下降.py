@@ -19,6 +19,7 @@ class LogiReg:
         z = np.dot(X, self.theta)
         return 1 / (1 + np.exp(-z))
 
+    # 损失函数
     def loss_func(self, X, Y):
         Hx = self.sigmoid(X)
         return -np.dot(Y.T, np.log(Hx)) - np.dot((1 - Y).T, np.log(1 - Hx)) + self.C * np.dot(self.theta.T, self.theta) / 2, Hx
@@ -26,7 +27,7 @@ class LogiReg:
     def fit(self, X, Y, alpha):
         X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
         self.theta = np.ones((X.shape[1], 1))
-        Y = Y.reshape(-1, 1)
+        Y = Y.reshape(-1, 1)  # 转为列向量
         new_loss, Hx = self.loss_func(X, Y)
         while True:
             old_loss = new_loss
@@ -38,19 +39,23 @@ class LogiReg:
                 break
         self.coef_, self.intercept_ = self.theta.T[0][1:], self.theta[0][0]
 
+    # 用模型预测
     def predict(self, X):
         X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
         Y_pred = np.apply_along_axis(lambda x: 1 if x >= 0.5 else 0, 1, self.sigmoid(X))
         return Y_pred
 
+    # 计算准确率
     def score(self, X, Y_true):
         Y_pred = self.predict(X)
         diff = (Y_pred == Y_true)
         return np.sum(diff) / len(diff)
 
 data, target = load_breast_cancer(return_X_y=True)
+# 极差归一化
 MinMax = MinMaxScaler()
 data = MinMax.fit_transform(data)
+# 划分训练集和测试集
 X_train, X_test, Y_train, Y_test = train_test_split(data, target, test_size=0.3)
 Alpha = 0.01
 Logi = LogiReg(C=100)
@@ -58,6 +63,7 @@ Logi.fit(X_train, Y_train, Alpha)
 print("自己的系数：", Logi.coef_)
 print("自己的截距：", Logi.intercept_)
 print("评估准确率:", Logi.score(X_test, Y_test))
+# sklearn
 lg = LogisticRegression(C=1, max_iter=10000)
 lg.fit(X_train, Y_train)
 print("sklearn系数：", lg.coef_)
